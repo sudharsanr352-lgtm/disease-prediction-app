@@ -595,4 +595,4 @@ def train_knn_only_route():
 if __name__ == '__main__':
     print("🚀 Starting MediPredict AI (Full Ensemble Version)...")
     print("📊 Access the API at: http://localhost:8080")
-    app.run(debug=True, host='0.0.0.0', port=8081, use_reloader=False)
+    app.run(debug=True, host='0.0.0.0', port=8081, use_reloader=False)# Final update 
