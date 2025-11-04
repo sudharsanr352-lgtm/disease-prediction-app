@@ -1,5 +1,5 @@
 #final folder
-from flask import Flask, jsonify, request, render_templates
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
