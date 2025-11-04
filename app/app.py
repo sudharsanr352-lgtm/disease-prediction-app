@@ -1,4 +1,4 @@
-# final change
+#final folderr
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 import pandas as pd
@@ -52,33 +52,41 @@ class DiseasePredictor:
         self.classification_report = "" 
         
     def load_dataset(self):
+        """Enhanced dataset loading with better error handling for Render"""
         try:
-            dataset_paths = ['dataset/improved_disease_dataset.csv', 'improved_disease_dataset.csv']
+            # Try multiple possible paths for Render compatibility
+            dataset_paths = [
+                'dataset/improved_disease_dataset.csv',
+                'improved_disease_dataset.csv', 
+                './dataset/improved_disease_dataset.csv',
+                '/opt/render/project/src/dataset/improved_disease_dataset.csv',
+                '/opt/render/project/improved_disease_dataset.csv'
+            ]
+            
             data = None
             for path in dataset_paths:
                 if os.path.exists(path):
                     data = pd.read_csv(path)
                     print(f"✅ Ensemble dataset loaded from: {path}")
                     break
+            
             if data is None:
-                 print("📝 Creating enhanced medical dataset...")
-                 data = self._create_enhanced_medical_dataset()
+                print("❌ No dataset file found. Available files:")
+                # List all files to debug
+                for root, dirs, files in os.walk('.'):
+                    for file in files:
+                        if '.csv' in file:
+                            print(f"   Found: {os.path.join(root, file)}")
+                
+                # Create minimal dataset as fallback
+                print("📝 Creating enhanced medical dataset as fallback...")
+                data = self._create_enhanced_medical_dataset()
+                
             return data
         except Exception as e:
             print(f"❌ Error loading dataset: {e}")
+            # Create emergency dataset
             return self._create_enhanced_medical_dataset()
-
-    # (Removed _create_enhanced_medical_dataset, _analyze_dataset, _handle_outliers 
-    #  ...for brevity, but they are still here from your previous code)
-    #  ... [All other functions from your previous app.py go here] ...
-    
-    # PASTE ALL THE OTHER FUNCTIONS FROM YOUR PREVIOUS app.py HERE
-    # (e.g., _create_enhanced_medical_dataset, _analyze_dataset, _handle_outliers,
-    #  create_visualizations, prepare_data, optimize_knn, train_models, 
-    #  predict, _symptoms_to_vector, _ensemble_prediction, save_models, load_models)
-    
-    # --- Make sure all functions from your previous app.py are included ---
-    # --- For this example, I am re-adding them so the file is complete ---
 
     def _create_enhanced_medical_dataset(self):
         """Create medical dataset with continuous features"""
@@ -132,7 +140,7 @@ class DiseasePredictor:
         visualizations = {}
         try:
             plt.figure(figsize=(15, 10))
-            # ... (All 6 subplots from your previous app.py) ...
+            
             # Boxplot
             plt.subplot(2, 3, 1)
             data['fever_severity'].plot(kind='box')
@@ -332,7 +340,12 @@ class DiseasePredictor:
     def save_models(self):
         """Save models and visualizations"""
         try:
-            os.makedirs('models', exist_ok=True)
+            # Create models directory if it doesn't exist
+            models_dir = 'models'
+            if not os.path.exists(models_dir):
+                os.makedirs(models_dir, exist_ok=True)
+                print(f"✅ Created directory: {models_dir}")
+            
             joblib.dump({
                 'models': self.models,
                 'label_encoder': self.label_encoder,
@@ -351,23 +364,30 @@ class DiseasePredictor:
     def load_models(self):
         """Load trained models"""
         try:
-            if os.path.exists('models/trained_models.pkl'):
-                saved_data = joblib.load('models/trained_models.pkl')
-                self.models = saved_data['models']
-                self.label_encoder = saved_data['label_encoder']
-                self.scaler = saved_data['scaler']
-                self.feature_names = saved_data['feature_names']
-                self.accuracy_scores = saved_data['accuracy_scores']
-                self.best_k = saved_data.get('best_k', 5)
-                self.confusion_matrices = saved_data.get('confusion_matrices', {})
-                self.visualizations = saved_data.get('visualizations', {})
-                self.disease_names = saved_data.get('disease_names', [])
-                self.is_trained = True
-                print("📁 (Ensemble) Pre-trained models loaded successfully")
-                return True
-            else:
-                print("📁 (Ensemble) No pre-trained models found. Please train first.")
-                return False
+            model_paths = [
+                'models/trained_models.pkl',
+                './models/trained_models.pkl',
+                '/opt/render/project/src/models/trained_models.pkl'
+            ]
+            
+            for path in model_paths:
+                if os.path.exists(path):
+                    saved_data = joblib.load(path)
+                    self.models = saved_data['models']
+                    self.label_encoder = saved_data['label_encoder']
+                    self.scaler = saved_data['scaler']
+                    self.feature_names = saved_data['feature_names']
+                    self.accuracy_scores = saved_data['accuracy_scores']
+                    self.best_k = saved_data.get('best_k', 5)
+                    self.confusion_matrices = saved_data.get('confusion_matrices', {})
+                    self.visualizations = saved_data.get('visualizations', {})
+                    self.disease_names = saved_data.get('disease_names', [])
+                    self.is_trained = True
+                    print(f"📁 (Ensemble) Pre-trained models loaded successfully from: {path}")
+                    return True
+            
+            print("📁 (Ensemble) No pre-trained models found. Please train first.")
+            return False
         except Exception as e:
             print(f"Error loading models: {e}")
             return False
@@ -383,132 +403,181 @@ def run_knn_only_analysis():
     This function contains all the logic from your knn.py script.
     It trains, evaluates, and generates visualization images.
     """
-    
-    # 1. Load Dataset
-    print("\n1. (KNN-Only) LOADING DATASET")
-    df = pd.read_csv('dataset/improved_disease_dataset.csv')
+    try:
+        print("\n1. (KNN-Only) LOADING DATASET")
+        
+        # Try multiple paths for dataset compatibility
+        dataset_paths = [
+            'dataset/improved_disease_dataset.csv',
+            'improved_disease_dataset.csv',
+            './dataset/improved_disease_dataset.csv',
+            '/opt/render/project/src/dataset/improved_disease_dataset.csv'
+        ]
+        
+        df = None
+        for path in dataset_paths:
+            if os.path.exists(path):
+                df = pd.read_csv(path)
+                print(f"✅ (KNN-Only) Dataset loaded from: {path}")
+                break
+        
+        if df is None:
+            print("❌ (KNN-Only) Dataset file not found. Available files:")
+            for root, dirs, files in os.walk('.'):
+                for file in files:
+                    if '.csv' in file:
+                        print(f"   Found: {os.path.join(root, file)}")
+            return {"error": "Dataset file not found for KNN analysis"}
 
-    # 2. Data Visualization
-    print("\n2. (KNN-Only) DATA VISUALIZATION")
-    fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-    
-    symptoms = df.columns[:-1] # Get symptom names
-    
-    # Disease distribution
-    top_diseases = df['disease'].value_counts().head(15)
-    axes[0,0].barh(range(len(top_diseases)), top_diseases.values, color='skyblue')
-    axes[0,0].set_yticks(range(len(top_diseases)))
-    axes[0,0].set_yticklabels(top_diseases.index)
-    axes[0,0].set_xlabel('Number of Cases')
-    axes[0,0].set_title('Top 15 Diseases Distribution')
-    axes[0,0].grid(True, alpha=0.3)
+        # 2. Data Visualization
+        print("\n2. (KNN-Only) DATA VISUALIZATION")
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        
+        symptoms = df.columns[:-1] # Get symptom names
+        
+        # Disease distribution
+        top_diseases = df['disease'].value_counts().head(15)
+        axes[0,0].barh(range(len(top_diseases)), top_diseases.values, color='skyblue')
+        axes[0,0].set_yticks(range(len(top_diseases)))
+        axes[0,0].set_yticklabels(top_diseases.index)
+        axes[0,0].set_xlabel('Number of Cases')
+        axes[0,0].set_title('Top 15 Diseases Distribution')
+        axes[0,0].grid(True, alpha=0.3)
 
-    # Symptom frequency
-    symptom_freq = df[symptoms].sum().sort_values(ascending=False)
-    axes[0,1].bar(range(len(symptom_freq)), symptom_freq.values, color='lightcoral')
-    axes[0,1].set_xticks(range(len(symptom_freq)))
-    axes[0,1].set_xticklabels(symptom_freq.index, rotation=45, ha='right')
-    axes[0,1].set_ylabel('Frequency')
-    axes[0,1].set_title('Symptom Frequency')
-    axes[0,1].grid(True, alpha=0.3)
+        # Symptom frequency
+        symptom_freq = df[symptoms].sum().sort_values(ascending=False)
+        axes[0,1].bar(range(len(symptom_freq)), symptom_freq.values, color='lightcoral')
+        axes[0,1].set_xticks(range(len(symptom_freq)))
+        axes[0,1].set_xticklabels(symptom_freq.index, rotation=45, ha='right')
+        axes[0,1].set_ylabel('Frequency')
+        axes[0,1].set_title('Symptom Frequency')
+        axes[0,1].grid(True, alpha=0.3)
 
-    # Correlation heatmap
-    correlation_matrix = df[symptoms].corr()
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, ax=axes[1,0], fmt='.2f')
-    axes[1,0].set_title('Symptom Correlation Matrix')
+        # Correlation heatmap
+        correlation_matrix = df[symptoms].corr()
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, ax=axes[1,0], fmt='.2f')
+        axes[1,0].set_title('Symptom Correlation Matrix')
 
-    # Disease vs Symptoms heatmap
-    sample_diseases = df['disease'].value_counts().head(6).index
-    disease_symptom_data = pd.DataFrame()
-    for disease in sample_diseases:
-        disease_data = df[df['disease'] == disease]
-        symptom_means = disease_data[symptoms].mean()
-        disease_symptom_data[disease] = symptom_means
-    sns.heatmap(disease_symptom_data, annot=True, cmap='YlOrRd', ax=axes[1,1])
-    axes[1,1].set_title('Symptom Patterns - Top 6 Diseases')
-    axes[1,1].tick_params(axis='x', rotation=45)
+        # Disease vs Symptoms heatmap
+        sample_diseases = df['disease'].value_counts().head(6).index
+        disease_symptom_data = pd.DataFrame()
+        for disease in sample_diseases:
+            disease_data = df[df['disease'] == disease]
+            symptom_means = disease_data[symptoms].mean()
+            disease_symptom_data[disease] = symptom_means
+        sns.heatmap(disease_symptom_data, annot=True, cmap='YlOrRd', ax=axes[1,1])
+        axes[1,1].set_title('Symptom Patterns - Top 6 Diseases')
+        axes[1,1].tick_params(axis='x', rotation=45)
 
-    plt.tight_layout()
-    img_buf1 = io.BytesIO()
-    plt.savefig(img_buf1, format='png', dpi=150, bbox_inches='tight')
-    img_buf1.seek(0)
-    analysis_dashboard_b64 = base64.b64encode(img_buf1.getvalue()).decode('utf-8')
-    plt.close(fig)
+        plt.tight_layout()
+        img_buf1 = io.BytesIO()
+        plt.savefig(img_buf1, format='png', dpi=150, bbox_inches='tight')
+        img_buf1.seek(0)
+        analysis_dashboard_b64 = base64.b64encode(img_buf1.getvalue()).decode('utf-8')
+        plt.close(fig)
 
-    # 3. Prepare Data
-    print("\n3. (KNN-Only) PREPARING DATA")
-    X = df.drop('disease', axis=1)
-    y = df['disease']
-    symptom_list = X.columns.tolist() # Save symptom list
-    le = LabelEncoder()
-    y_encoded = le.fit_transform(y)
-    X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded)
+        # 3. Prepare Data
+        print("\n3. (KNN-Only) PREPARING DATA")
+        X = df.drop('disease', axis=1)
+        y = df['disease']
+        symptom_list = X.columns.tolist() # Save symptom list
+        le = LabelEncoder()
+        y_encoded = le.fit_transform(y)
+        X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded)
 
-    # 4. Find Optimal K
-    print("\n4. (KNN-Only) FINDING OPTIMAL K")
-    k_range = range(1, 31)
-    test_scores = []
-    cv_scores = []
-    for k in k_range:
-        knn = KNeighborsClassifier(n_neighbors=k)
-        knn.fit(X_train, y_train)
-        test_scores.append(knn.score(X_test, y_test))
-        cv_score = cross_val_score(knn, X, y_encoded, cv=5).mean()
-        cv_scores.append(cv_score)
+        # 4. Find Optimal K
+        print("\n4. (KNN-Only) FINDING OPTIMAL K")
+        k_range = range(1, 31)
+        test_scores = []
+        cv_scores = []
+        for k in k_range:
+            knn = KNeighborsClassifier(n_neighbors=k)
+            knn.fit(X_train, y_train)
+            test_scores.append(knn.score(X_test, y_test))
+            cv_score = cross_val_score(knn, X, y_encoded, cv=5).mean()
+            cv_scores.append(cv_score)
 
-    plt.figure(figsize=(12, 6))
-    plt.plot(k_range, test_scores, 'r-', label='Test Accuracy', marker='o')
-    plt.plot(k_range, cv_scores, 'g-', label='CV Accuracy', marker='o')
-    plt.xlabel('K Value')
-    plt.ylabel('Accuracy')
-    plt.title('Finding Optimal K for Disease Prediction')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.xticks(k_range)
-    img_buf2 = io.BytesIO()
-    plt.savefig(img_buf2, format='png', dpi=150, bbox_inches='tight')
-    img_buf2.seek(0)
-    optimal_k_b64 = base64.b64encode(img_buf2.getvalue()).decode('utf-8')
-    plt.close()
+        plt.figure(figsize=(12, 6))
+        plt.plot(k_range, test_scores, 'r-', label='Test Accuracy', marker='o')
+        plt.plot(k_range, cv_scores, 'g-', label='CV Accuracy', marker='o')
+        plt.xlabel('K Value')
+        plt.ylabel('Accuracy')
+        plt.title('Finding Optimal K for Disease Prediction')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.xticks(k_range)
+        img_buf2 = io.BytesIO()
+        plt.savefig(img_buf2, format='png', dpi=150, bbox_inches='tight')
+        img_buf2.seek(0)
+        optimal_k_b64 = base64.b64encode(img_buf2.getvalue()).decode('utf-8')
+        plt.close()
 
-    optimal_k = k_range[np.argmax(test_scores)]
-    print(f"(KNN-Only) Optimal K: {optimal_k}")
+        optimal_k = k_range[np.argmax(test_scores)]
+        print(f"(KNN-Only) Optimal K: {optimal_k}")
 
-    # 5. Train Final Model & Evaluate
-    print("\n5. (KNN-Only) TRAINING FINAL MODEL")
-    final_knn = KNeighborsClassifier(n_neighbors=optimal_k)
-    final_knn.fit(X_train, y_train)
-    final_accuracy = final_knn.score(X_test, y_test)
-    y_pred = final_knn.predict(X_test)
-    print(f"(KNN-Only) Final Model Accuracy: {final_accuracy:.4f}")
-    
-    report_dict = classification_report(y_test, y_pred, target_names=le.classes_, output_dict=True)
-    report_str = classification_report(y_test, y_pred, target_names=le.classes_)
-    print("Classification Report:\n", report_str)
+        # 5. Train Final Model & Evaluate
+        print("\n5. (KNN-Only) TRAINING FINAL MODEL")
+        final_knn = KNeighborsClassifier(n_neighbors=optimal_k)
+        final_knn.fit(X_train, y_train)
+        final_accuracy = final_knn.score(X_test, y_test)
+        y_pred = final_knn.predict(X_test)
+        print(f"(KNN-Only) Final Model Accuracy: {final_accuracy:.4f}")
+        
+        report_dict = classification_report(y_test, y_pred, target_names=le.classes_, output_dict=True)
+        report_str = classification_report(y_test, y_pred, target_names=le.classes_)
+        print("Classification Report:\n", report_str)
 
-    # 6. Save Models (for knnpredict.py logic)
-    print("\n6. (KNN-Only) SAVING MODELS")
-    joblib.dump(final_knn, 'knn_model.pkl')
-    joblib.dump(le, 'label_encoder.pkl')
-    joblib.dump(symptom_list, 'symptoms.pkl') # Save the symptoms list
-    print("Models saved: knn_model.pkl, label_encoder.pkl, symptoms.pkl")
-    
-    # 7. Return all results
-    return {
-        "message": f"KNN-Only Training complete! Optimal K={optimal_k}, Accuracy={final_accuracy:.4f}",
-        "accuracy": final_accuracy,
-        "optimal_k": optimal_k,
-        "classification_report": report_dict,
-        "visualizations": {
-            "disease_analysis": analysis_dashboard_b64,
-            "optimal_k_plot": optimal_k_b64
+        # 6. Save Models (for knnpredict.py logic)
+        print("\n6. (KNN-Only) SAVING MODELS")
+        # Create directory if needed
+        if not os.path.exists('.'):
+            os.makedirs('.', exist_ok=True)
+            
+        joblib.dump(final_knn, 'knn_model.pkl')
+        joblib.dump(le, 'label_encoder.pkl')
+        joblib.dump(symptom_list, 'symptoms.pkl') # Save the symptoms list
+        print("Models saved: knn_model.pkl, label_encoder.pkl, symptoms.pkl")
+        
+        # 7. Return all results
+        return {
+            "message": f"KNN-Only Training complete! Optimal K={optimal_k}, Accuracy={final_accuracy:.4f}",
+            "accuracy": final_accuracy,
+            "optimal_k": optimal_k,
+            "classification_report": report_dict,
+            "visualizations": {
+                "disease_analysis": analysis_dashboard_b64,
+                "optimal_k_plot": optimal_k_b64
+            }
         }
-    }
+        
+    except Exception as e:
+        print(f"❌ KNN-only analysis error: {e}")
+        return {"error": f"KNN analysis failed: {str(e)}"}
 
 
 # =====================================================================
 #  FLASK ROUTES
 # =====================================================================
+
+# Add startup diagnostics
+@app.before_request
+def startup_diagnostics():
+    """Run diagnostics on first request"""
+    if not hasattr(app, 'startup_ran'):
+        print("🔍 Startup Diagnostics:")
+        print(f"Current directory: {os.getcwd()}")
+        print("Files in root:", [f for f in os.listdir('.') if os.path.isfile(f)])
+        if os.path.exists('dataset'):
+            print("Dataset files:", os.listdir('dataset'))
+        if os.path.exists('models'):
+            print("Model files:", os.listdir('models'))
+        
+        # Try to load models on startup
+        print("🔄 Loading pre-trained models...")
+        predictor.load_models()
+        
+        app.startup_ran = True
+
 @app.route('/')
 def home():
     """Serves the main HTML page."""
@@ -517,15 +586,21 @@ def home():
 @app.route('/health', methods=['GET'])
 def health_check():
     """Check if the backend is running."""
-    # Check if the 4-model ensemble is trained
-    return jsonify({'status': 'healthy', 'ml_ready': predictor.is_trained})
+    return jsonify({
+        'status': 'healthy', 
+        'ml_ready': predictor.is_trained,
+        'message': 'MediPredict AI Backend is running!'
+    })
 
 @app.route('/symptoms', methods=['GET'])
 def get_symptoms():
     """Get the list of symptoms and diseases for the 4-MODEL ENSEMBLE."""
     if not predictor.is_trained:
          if not predictor.load_models():
-            return jsonify({'error': 'Models not loaded. Please train the 4-model ensemble first.'}), 500
+            return jsonify({
+                'error': 'Models not loaded. Please train the 4-model ensemble first.',
+                'available_features': predictor.feature_names if hasattr(predictor, 'feature_names') else []
+            }), 500
     
     return jsonify({
         'symptoms': predictor.feature_names,
@@ -593,7 +668,36 @@ def train_knn_only_route():
         print(f"❌ [SERVER] KNN-Only Training Error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/debug', methods=['GET'])
+def debug_info():
+    """Debug endpoint to check file structure and model status"""
+    info = {
+        'current_directory': os.getcwd(),
+        'files_in_root': [f for f in os.listdir('.') if os.path.isfile(f)],
+        'directories_in_root': [d for d in os.listdir('.') if os.path.isdir(d)],
+        'model_trained': predictor.is_trained,
+        'dataset_exists': os.path.exists('dataset/improved_disease_dataset.csv') or os.path.exists('improved_disease_dataset.csv')
+    }
+    
+    if os.path.exists('dataset'):
+        info['dataset_files'] = os.listdir('dataset')
+    if os.path.exists('models'):
+        info['model_files'] = os.listdir('models')
+        
+    return jsonify(info)
+
 if __name__ == '__main__':
     print("🚀 Starting MediPredict AI (Full Ensemble Version)...")
+    print("🔍 Running startup diagnostics...")
+    
+    # Run diagnostics on startup
+    print(f"Current directory: {os.getcwd()}")
+    print("Files in root:", [f for f in os.listdir('.') if os.path.isfile(f)])
+    
+    # Try to load pre-trained models
+    print("🔄 Loading pre-trained models...")
+    predictor.load_models()
+    
     print("📊 Access the API at: http://localhost:8080")
-    app.run(debug=True, host='0.0.0.0', port=8081, use_reloader=False)
+    print("🔧 Debug info available at: http://localhost:8080/debug")
+    app.run(debug=True, host='0.0.0.0', port=8080, use_reloader=False)
